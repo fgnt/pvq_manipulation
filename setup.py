@@ -9,5 +9,8 @@ setup(
     keywords='audio speech',
     install_requires=[
         'torchdiffeq',
+        'paderbox @ git+http://github.com/fgnt/paderbox',
+        'padertorch @ git+http://github.com/fgnt/padertorch',
+        'TTS @ git+https://github.com/coqui-ai/TTS.git@dev#egg=TTS',
     ],
 )
