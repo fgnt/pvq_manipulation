@@ -6,7 +6,7 @@ This repository contains code for manipulating perceptual voice quality (PVQ) fe
 
 ## Installation
 
-### Step 1: Clone the repository and install
+### Clone the repository and install
 
 ```sh
 git clone https://github.com/FrederikRautenberg/pvq_manipulation.git
@@ -14,10 +14,10 @@ cd pvq_manipulation
 pip install -e .
 
 
-# Install YourTTS from
+### Install YourTTS from
 https://github.com/coqui-ai/TTS
 
 
-# Make sure that Paderbox and Padertorch are installed from 
+### Make sure that Paderbox and Padertorch are installed from 
 https://github.com/fgnt/paderbox
 https://github.com/fgnt/padertorch
