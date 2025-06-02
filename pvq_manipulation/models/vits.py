@@ -29,6 +29,9 @@ from TTS.vocoder.models.hifigan_generator import HifiganGenerator
 from trainer.trainer import to_cuda
 from typing import Dict, List, Union
 
+if not torch.cuda.is_available():
+    from concurrent.futures import ThreadPoolExecutor
+
 
 STORAGE_ROOT = Path(os.getenv('STORAGE_ROOT')).expanduser()
 
@@ -132,6 +135,14 @@ class Vits_NT(Vits):
         spectrogram = torch.sqrt(spectrogram + 1e-6)
         return spectrogram
 
+    @staticmethod
+    def normalize_d_vectors(d_vector, file_path):
+        global_mean = pb.io.load(file_path / "mean.json")
+        global_mean = torch.tensor(global_mean, dtype=torch.float32)
+        d_vector = (d_vector - global_mean)
+        d_vector = d_vector / torch.linalg.norm(d_vector, keepdim=True, dim=-1)
+        return d_vector
+
     def get_aux_input_from_test_sentences(self, sentence_info):
         """
         Get aux input for the inference step from test sentences
@@ -152,9 +163,9 @@ class Vits_NT(Vits):
 
     @staticmethod
     def init_from_config(
-            config: "VitsConfig",
-            samples= None,
-            verbose=True
+        config: "VitsConfig",
+        samples=None,
+        verbose=True
     ):
         """
         Initiate model from config
@@ -204,12 +215,19 @@ class Vits_NT(Vits):
         Returns:
             - model_outputs (torch.Tensor): (batch_size, T_wav) Synthesized waveform
         """
-        speaker_embedding = aux_input['d_vector'].detach()[:, :, None]
-        if aux_input['d_vector_man'] is not None:
-            speaker_embedding_man = aux_input['d_vector_man'].detach()[:, :, None]
+        speaker_embedding = aux_input['d_vector']
+        if self.config.normalize_vectors:
+            speaker_embedding = self.normalize_d_vectors(
+                speaker_embedding,
+                Path(aux_input['d_vector_storage_root']).parent.parent
+            )
+
+        if 'd_vector_man' in aux_input.keys() and aux_input['d_vector_man'] is not None:
+            speaker_embedding_man = aux_input['d_vector_man']
         else:
             speaker_embedding_man = speaker_embedding
-        aux_input['tokens'] = x.clone()
+
+        aux_input['tokens'] = x
         x_lengths = self._set_x_lengths(x, aux_input)
         x, m_p, logs_p, x_mask = self.text_encoder(
             x,
@@ -219,7 +237,7 @@ class Vits_NT(Vits):
         logw = self.duration_predictor(
             x,
             x_mask,
-            g=speaker_embedding,
+            g=speaker_embedding[:, :, None],
             lang_emb=None,
         )
 
@@ -230,21 +248,41 @@ class Vits_NT(Vits):
 
         attn_mask = x_mask * y_mask.transpose(1, 2)
         attn = generate_path(w_ceil.squeeze(1), attn_mask.squeeze(1).transpose(1, 2))
-        m_p = torch.matmul(attn.transpose(1, 2), m_p.transpose(1, 2)).transpose(1, 2)
-        logs_p = torch.matmul(attn.transpose(1, 2), logs_p.transpose(1, 2)).transpose(1, 2)
+
+        m_p = torch.einsum('blm, bnl -> bnm', attn, m_p)
+        logs_p = torch.einsum('blm, bnl -> bnm', attn, logs_p)
 
         z_p = m_p + torch.randn_like(m_p) * torch.exp(logs_p) * self.inference_noise_scale
 
-        z = self.flow(z_p, y_mask, g=speaker_embedding_man, reverse=True)
+        z = self.flow(z_p, y_mask, g=speaker_embedding_man[:, :, None], reverse=True)
         z, _, _, y_mask = self.upsampling_z(
             z,
             y_lengths=y_lengths,
             y_mask=y_mask
         )
-        o = self.waveform_decoder(
-            (z * y_mask)[:, :, : self.max_inference_len],
-            g=speaker_embedding_man if self.config.gan_speaker_conditioning else None
-        )
+
+        if not torch.cuda.is_available():
+            num_chunks = 2
+            chunk_size = z.shape[-1] // num_chunks
+            z_chunks = torch.split(z, chunk_size, dim=-1)
+
+            def decode_chunk(z_chunk):
+                return self.waveform_decoder(
+                    z_chunk,
+                    g=speaker_embedding_man[:, :, None] if self.config.gan_speaker_conditioning else None
+                )
+
+            with ThreadPoolExecutor(max_workers=num_chunks) as executor:
+                futures = [executor.submit(decode_chunk, chunk) for chunk in z_chunks]
+                results = [f.result() for f in futures]
+
+            o = torch.cat(results, dim=-1)
+
+        else:
+            o = self.waveform_decoder(
+                (z * y_mask)[:, :, : self.max_inference_len],
+                g=speaker_embedding_man[:, :, None] if self.config.gan_speaker_conditioning else None
+            )
         return o
 
     def forward(self, x, x_lengths, y, y_lengths, aux_input, inference=False):
@@ -403,10 +441,16 @@ class Vits_NT(Vits):
             self.tokenizer.text_to_ids(aux_inputs["text"], language=None),
             dtype=np.int32,
         )
-        d_vector = embedding_to_torch(aux_inputs["d_vector"], device=device)
+        if isinstance(aux_inputs["d_vector"], np.ndarray):
+            aux_inputs["d_vector"] = embedding_to_torch(aux_inputs["d_vector"], device=device)
+        else:
+            aux_inputs["d_vector"] = aux_inputs["d_vector"].to(device)
 
-        if "d_vector_man" in aux_inputs.keys():
-            d_vector_man = embedding_to_torch(aux_inputs["d_vector_man"], device=device)
+        if "d_vector_man" in aux_inputs.keys(): 
+            if isinstance(aux_inputs["d_vector_man"], np.ndarray):
+                aux_inputs["d_vector_man"] = embedding_to_torch(aux_inputs["d_vector_man"], device=device)
+            else:
+                aux_inputs["d_vector_man"] = aux_inputs["d_vector_man"].to(device)
 
         text_inputs = numpy_to_torch(text_inputs, torch.long, device=device)
         text_inputs = text_inputs.unsqueeze(0)
@@ -417,8 +461,7 @@ class Vits_NT(Vits):
                 "x_lengths": torch.tensor(
                     text_inputs.shape[1:2]
                 ).to(text_inputs.device),
-                "d_vector": d_vector,
-                "d_vector_man": d_vector_man if "d_vector_man" in aux_inputs.keys() else None
+                **aux_inputs
             }
         )[0].data.cpu().numpy().squeeze()
         return wav

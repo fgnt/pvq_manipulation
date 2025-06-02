@@ -214,12 +214,9 @@ class VitsConfig_NT(BaseTTSConfig):
     gan_speaker_conditioning: bool = True
 
     sample_rate: int = 16_000
-    use_vad: bool = True
-    use_phone_labels: bool = False
 
     CONFIG_SOLVER: str = ''
-
-    use_speaker_embedding_cond: bool = True
+    normalize_vectors: bool = True
 
     def __post_init__(self):
         for key, val in self.model_args.items():
