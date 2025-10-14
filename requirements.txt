@@ -3,3 +3,4 @@ padertorch
 onnxruntime
 torchdiffeq
 git+https://gitlab.tugraz.at/speech/creapy.git
+ipykernel
