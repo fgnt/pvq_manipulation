@@ -186,12 +186,12 @@ class Vits_NT(Vits):
         ap = AudioProcessor.init_from_config(config, verbose=verbose)
         tokenizer, new_config = TTSTokenizer.init_from_config(config)
         language_manager = LanguageManager.init_from_config(config)
-        speaker_manager_config = pb.io.load(Path(config['d_vector_model_file'])/'config.json')
+        speaker_manager_config = pb.io.load(Path(config['d_vector_model_file'])/'config_d_vector_model.json')
         
         speaker_manager = pt.Configurable.from_config(speaker_manager_config)
         speaker_manager.load_state_dict(
             torch.load(
-                Path(config['d_vector_model_file'])/"model.pt", 
+                Path(config['d_vector_model_file'])/"d_vector_model.pt", 
                 weights_only=True, 
                 map_location=device
                 )
@@ -401,7 +401,7 @@ class Vits_NT(Vits):
         Returns:
             model (pvq_manipulation.models.vits.Vits_NT): model
         """
-        config = pb.io.load_json(model_path / "config.json")
+        config = pb.io.load_json(model_path / "config_tts_model.json")
         model_args = VitsArgs(**config['model_args'])
         audio_config = VitsAudioConfig_NT(**config['audio'])
         characters_config = CharactersConfig(**config['characters'])

@@ -15,5 +15,6 @@ setup(
         'onnxruntime',
         'creapy @ git+https://gitlab.tugraz.at/speech/creapy.git',
         'ipywidgets',
+        'ipykernel'
     ],
 )

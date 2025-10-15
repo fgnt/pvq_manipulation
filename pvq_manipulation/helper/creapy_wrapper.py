@@ -186,7 +186,7 @@ def process_file(data, sample_rate: int = 16_000):
     X_test = pd.DataFrame(X_all, columns=preprocessing_features + class_features)
 
     y_pred = np.zeros(creak_data_buff.shape[1])
-    model_path = Path("./saved_models/creapy/model_ALL.csv")
+    model_path = Path("../saved_models/creapy_model.csv")
     model = load_model(model_path)
 
     y_pred[included_indices] = model.predict(_X_test)

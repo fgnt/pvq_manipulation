@@ -66,7 +66,7 @@ def load_speaker_labels(
     config_norm_flow, 
     hubert_model, 
     pvq_labels,
-    reg_stor_dir=Path('./saved_models/pvq_extractor/')
+    reg_stor_dir=Path('../saved_models/')
 ):
     audio_data = torch.tensor(example['loaded_audio_data']['16_000'], dtype=torch.float)[None,:]
     num_samples = torch.tensor([audio_data.shape[-1]])
@@ -105,7 +105,7 @@ def load_audio_files(audio_path):
     if type(audio_path) == dict:
         example = audio_path
         audio_file = example['audio_file']
-        audio_path = f"./saved_models/audio_files/{audio_file}.wav"
+        audio_path = f"../saved_models/{audio_file}.wav"
     else:
         example = {
             'speaker_id': None,
