@@ -7,7 +7,6 @@ import pandas as pd
 from scipy.signal.windows import hann
 from pathlib import Path
 from sklearn.impute import SimpleImputer
-
 import creapy
 from creapy.feature_extraction.feature_extraction import _cpp, _h1_h2, _jitter, _shimmer, _f0mean, _zcr, _ste
 from sklearn.ensemble import RandomForestClassifier
@@ -121,7 +120,6 @@ def _hnr(data: np.ndarray, sound: pm.Sound, sr) -> float:
 
 
 def blockwise_feature_calculation(data: np.ndarray, sr, feature):
-
     sounds = [pm.Sound(values=block, sampling_frequency=sr) for block in data]
     function = FEATURE_MAPPING[feature]
     res = [function(block, sound, sr) for block, sound in zip(data, sounds)]
@@ -129,7 +127,7 @@ def blockwise_feature_calculation(data: np.ndarray, sr, feature):
 
 
 def process_file(data, sample_rate: int = 16_000):
-    _config = creapy.config.get_config()
+    _config = creapy.utils.get_config()
     user_cfg = _config['USER']
     model_cfg = _config['MODEL']
 
@@ -188,9 +186,7 @@ def process_file(data, sample_rate: int = 16_000):
     X_test = pd.DataFrame(X_all, columns=preprocessing_features + class_features)
 
     y_pred = np.zeros(creak_data_buff.shape[1])
-    gender_model = user_cfg['gender_model']
-    model_path = creapy.utils.helpers.get_root() / model_cfg["model_location"]
-    model_path = (model_path.parent / f"{model_path.stem}_{gender_model.upper()}").with_suffix(".csv")
+    model_path = Path("./saved_models/creapy/model_ALL.csv")
     model = load_model(model_path)
 
     y_pred[included_indices] = model.predict(_X_test)

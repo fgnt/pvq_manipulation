@@ -216,7 +216,7 @@ class VitsConfig_NT(BaseTTSConfig):
     sample_rate: int = 16_000
 
     CONFIG_SOLVER: str = ''
-    normalize_vectors: bool = True
+    normalize_vectors: bool = False
 
     def __post_init__(self):
         for key, val in self.model_args.items():

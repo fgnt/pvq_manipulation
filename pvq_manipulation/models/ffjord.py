@@ -6,6 +6,12 @@ from torchdiffeq import odeint_adjoint as odeint
 from pvq_manipulation.helper.moving_batch_norm import MovingBatchNorm1d
 
 
+if not torch.cuda.is_available():
+    device = 'cpu'
+else:
+    device = 'cuda'
+
+
 class ODEBlock(torch.nn.Module):
     def __init__(
         self,
@@ -108,16 +114,20 @@ class FFJORD(Model):
             self.output_norm = MovingBatchNorm1d(self.input_dim, bn_lag=0)
 
     @staticmethod
-    def load_model(model_path, checkpoint):
-        model_dict = pb.io.load_yaml(model_path / "config.yaml")
-        model = Model.from_config(model_dict['model'])
+    def load_model(model_path, checkpoint, device=None):
+        if device is None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model_dict = pb.io.load(model_path / "config.json")
+        model = Model.from_config(model_dict)
         cp = torch.load(
             model_path / checkpoint,
-            map_location=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            map_location=device,
+            weights_only=True
         )
         model_weights = cp.copy()
-        model.load_state_dict(model_weights['model'])
+        model.load_state_dict(model_weights)
         model.eval()
+        model.to(device)
         return model
 
     def forward(

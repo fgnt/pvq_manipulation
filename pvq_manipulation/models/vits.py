@@ -30,7 +30,10 @@ from trainer.trainer import to_cuda
 from typing import Dict, List, Union
 
 if not torch.cuda.is_available():
+    device = 'cpu'
     from concurrent.futures import ThreadPoolExecutor
+else:
+    device = 'cuda'
 
 
 STORAGE_ROOT = Path(os.getenv('STORAGE_ROOT')).expanduser()
@@ -176,17 +179,23 @@ class Vits_NT(Vits):
         Returns:
             model (Vits): Initialized model.
         """
+
+        
         upsample_rate = torch.prod(torch.as_tensor(config.model_args.upsample_rates_decoder)).item()
         assert (upsample_rate == config.audio.hop_length), f" [!] Product of upsample rates must be equal to the hop length - {upsample_rate} vs {config.audio.hop_length}"
         ap = AudioProcessor.init_from_config(config, verbose=verbose)
         tokenizer, new_config = TTSTokenizer.init_from_config(config)
         language_manager = LanguageManager.init_from_config(config)
-        speaker_manager = pt.Module.from_storage_dir(
-            config['d_vector_model_file'],
-            checkpoint_name='ckpt_latest.pth',
-            consider_mpi=False,
-            config_name='config.json',
-        )
+        speaker_manager_config = pb.io.load(Path(config['d_vector_model_file'])/'config.json')
+        
+        speaker_manager = pt.Configurable.from_config(speaker_manager_config)
+        speaker_manager.load_state_dict(
+            torch.load(
+                Path(config['d_vector_model_file'])/"model.pt", 
+                weights_only=True, 
+                map_location=device
+                )
+            )
         speaker_manager.num_speakers = config['num_speakers']
         for param in speaker_manager.parameters():
             param.requires_grad = False
@@ -407,12 +416,12 @@ class Vits_NT(Vits):
             **config,
         )
         model = Vits_NT.init_from_config(config)
-        cp = torch.load(
+        model_weights = torch.load(
             model_path / checkpoint,
-            map_location=torch.device('cpu')
+            map_location=torch.device(device)
         )
-        model_weights = cp['model'].copy()
         model.load_state_dict(model_weights, strict=False)
+        model.to(device)
         model.eval()
         return model
 
