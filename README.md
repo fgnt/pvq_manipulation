@@ -9,7 +9,11 @@ This repository contains code for manipulating perceptual voice quality (PVQ) fe
 ### Clone the repository and install
 
 ```sh
-gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
+git clone https://github.com/fgnt/pvq_manipulation.git
 cd pvq_manipulation
 pip install -e .
+```
+### Download the weights
+```sh
+gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
 ```
