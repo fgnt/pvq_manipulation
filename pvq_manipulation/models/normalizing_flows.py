@@ -264,7 +264,6 @@ class CCNF(Model):
     
         return observations, labels
 
-
     def review(self, example, outputs):
         z_t0, delta_logpz, _ = outputs
         logpz_t1 = self.latent_dist.log_prob(z_t0) - delta_logpz
