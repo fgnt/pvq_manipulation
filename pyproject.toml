@@ -14,7 +14,6 @@ authors = [
 license = { text = "MIT" }
 keywords = ["audio", "speech"]
 
-# Haupt-Abhängigkeiten
 dependencies = [
     "torchdiffeq",
     "TTS==0.22.0",
@@ -27,7 +26,6 @@ dependencies = [
     "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
 ]
 
-# Optional: Dev-Dependencies für Tests, Linting etc.
 [project.optional-dependencies]
 dev = [
     "pytest",
