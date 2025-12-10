@@ -1,6 +1,0 @@
-TTS==0.22.0
-padertorch
-onnxruntime
-torchdiffeq
-git+https://gitlab.tugraz.at/speech/creapy.git
-ipykernel

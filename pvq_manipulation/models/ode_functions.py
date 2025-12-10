@@ -4,6 +4,7 @@ f() is a neural network with the architecture defined in StyleFlow
 StyleFlow: Attribute-conditioned Exploration of StyleGAN-Generated Images using Conditional Continuous Normalizing Flows
 """
 import torch
+from padertorch.ops.mappings import ACTIVATION_FN_MAP
 
 
 class CNFNN(torch.nn.Module):
@@ -93,4 +94,52 @@ class CNFBlock(torch.nn.Module):
 
         if not self.output_layer:
             z = torch.tanh(z)
+        return z
+
+
+class MLP(torch.nn.Module):
+    def __init__(
+            self,
+            input_dim,
+            condition_dim,
+            hidden_channels,
+            activation='relu'
+    ):
+        super().__init__()
+        self.layers = torch.nn.ModuleList()
+        self.input_dim = input_dim
+        hidden_channels = hidden_channels + [input_dim]
+
+        self.layers.append(torch.nn.Linear(
+            input_dim + condition_dim + 1,
+            hidden_channels[0]
+        ))
+        self.layers.append(ACTIVATION_FN_MAP[activation]())
+
+        for idx in range(len(hidden_channels) - 1):
+            self.layers.append(
+                torch.nn.Linear(
+                    hidden_channels[idx],
+                    hidden_channels[idx + 1]
+                )
+            )
+            if idx < len(hidden_channels) - 2:
+                self.layers.append(ACTIVATION_FN_MAP[activation]())
+
+    def forward(self, t, z, labels):
+        """
+        This function computes: Δz = f(t, z, labels)
+
+        Args:
+            t (torch.Tensor): () Time step of the ODE
+            z (torch.Tensor): (Batch_size, Input_dim) Intermediate value
+            labels (torch.Tensor): (Batch_size, condition_dim) Speaker attributes
+
+        Returns:
+            Δz (torch.Tensor): : (Batch_size, Input_dim) Computed delta
+        """
+        t = t.expand(z.shape[0], 1)
+        z = torch.cat((z, labels, t), dim=1)
+        for layer in self.layers:
+            z = layer(z)
         return z

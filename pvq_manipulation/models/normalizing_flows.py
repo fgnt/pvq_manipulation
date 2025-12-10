@@ -94,7 +94,7 @@ class ODEBlock(torch.nn.Module):
         return torch.randint(low=0, high=2, size=z.shape).to(z) * 2 - 1
 
 
-class FFJORD(Model):
+class CCNF(Model):
     """
     This class is an implementation of the FFJORD model as proposed in
     https://arxiv.org/pdf/1810.01367
@@ -239,11 +239,31 @@ class FFJORD(Model):
         return state
 
     def example_to_device(self, examples, device):
-        observations = [example['observation'] for example in examples]
-        labels = [example['speaker_conditioning'].tolist() for example in examples if 'speaker_conditioning' in example]
-        observations_tensor = torch.tensor(observations, device=device, dtype=torch.float)
-        labels_tensor = torch.tensor(labels, device=device, dtype=torch.float) if labels else None
-        return observations_tensor, labels_tensor
+        observations = []
+        labels = []
+        for example in examples:
+            observation = torch.tensor(example["observation"])
+            if observation.dim() == 1:
+                observation = observation[None, :]
+    
+            observations.append(observation)
+    
+            if "speaker_conditioning" in example:
+                label = torch.tensor(example["speaker_conditioning"])
+                if label.dim() == 1:
+                    label = label[None]   
+                elif label.dim() == 0:
+                    label = label[None, None]
+                labels.append(label)
+    
+        observations = torch.concatenate(observations, dim=0).float().to(device)
+        if labels:
+            labels = torch.concatenate(labels, dim=0).float().to(device)  
+        else:
+            labels = None
+    
+        return observations, labels
+
 
     def review(self, example, outputs):
         z_t0, delta_logpz, _ = outputs

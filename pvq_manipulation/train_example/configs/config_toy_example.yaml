@@ -1,0 +1,22 @@
+trainer:
+  model:
+    factory: pvq_manipulation.models.normalizing_flows.CCNF
+    normalize: True
+    ode_function:
+      factory: pvq_manipulation.models.ode_functions.MLP
+      input_dim: 2
+      condition_dim: 1
+      hidden_channels: [128, 128]
+      activation: tanh
+  optimizer:
+    factory: padertorch.train.optimizer.Adam
+    lr: 1.0e-2
+    weight_decay: 1.0e-5
+  summary_trigger: [250, 'iteration']
+  checkpoint_trigger: [500, 'iteration']
+  stop_trigger: [100_000, 'iteration']
+  storage_dir: /path/to/default/storage
+
+storage_dir_dataset: ./dataset
+batch_size: 20
+ex_name: toy_example_flow

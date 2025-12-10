@@ -1,0 +1,40 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pvq_manipulation"
+version = "0.0.1"
+description = "Audio and speech manipulation tools"
+authors = [
+    { name = "Department of Communications Engineering, Paderborn University", email = "sek@nt.upb.de" }
+]
+license = { text = "MIT" }
+keywords = ["audio", "speech"]
+
+# Haupt-Abhängigkeiten
+dependencies = [
+    "torchdiffeq",
+    "TTS==0.22.0",
+    "padertorch",
+    "onnxruntime",
+    "ipywidgets",
+    "ipykernel",
+    "sacred",
+    "hydra-core",
+    "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
+]
+
+# Optional: Dev-Dependencies für Tests, Linting etc.
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+    "isort",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

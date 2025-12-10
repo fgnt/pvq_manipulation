@@ -1,0 +1,20 @@
+trainer:
+  model:
+    factory: pvq_manipulation.models.normalizing_flows.CCNF
+    normalize: True
+    ode_function:
+      factory: pvq_manipulation.models.ode_functions.CNFNN
+      input_dim: 2
+      condition_dim: 7
+      hidden_channels: [512]
+  optimizer:
+    factory: padertorch.train.optimizer.Adam
+    lr: 1.0e-4
+    weight_decay: 1.0e-5
+  summary_trigger: [1000, 'iteration']
+  checkpoint_trigger: [1000, 'iteration']
+  stop_trigger: [500_000, 'iteration']
+  storage_dir: /path/to/default/storage
+
+batch_size: 200
+ex_name: pvq_manipulation

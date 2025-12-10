@@ -15,6 +15,9 @@ gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
 ## Manipulation of Voice 
 To get started, follow the Example_Notebook.ipynb.
 It demonstrates how to load the model, prepare an audio file, and apply perceptual voice quality manipulations step by step. 
+## Example Training
+To train your own model, follow the toy example in the train_example folder.
+
 ## Citation
 The manipulation method of manipulation Perceptual Voice Qualities was introduced in the paper ["Speech synthesis along perceptual voice quality dimensions"](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10888012)
 ```sh
