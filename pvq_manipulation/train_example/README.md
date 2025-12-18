@@ -41,5 +41,7 @@ The trainer requires an iterable dataset. In this toy example, the dataset is ge
   }
 }
 ```
-From the dictionary, a lazy dataset is created, and the observation files are loaded on-the-fly during the pipeline. To adapt the training for speaker embeddings and voice qualities, the observation field should contain the preloaded speaker embeddings, and the label field should represent the estimated voice quality strength (normalized between 0 and 1). Additionally, update the configuration to use config_flow_speech_manipulation.yaml. Example code for extracting these two features can be found in Example_Notebook.ipynb. 
-normalizing_flow.ipynb demonstrates how to load the trained model and how to apply the normalizing flow.
+From the dictionary, a lazy dataset is created, and the observation files are loaded on-the-fly during the pipeline. normalizing_flow.ipynb demonstrates how to load the trained model and how to apply the normalizing flow. 
+
+# Train model for voice quality manipulation
+To adapt the training for speaker embeddings and voice qualities, the observation field should contain the preloaded speaker embeddings, and the label field should represent the estimated voice quality strength (normalized between 0 and 1). Additionally, update the configuration to use config_flow_speech_manipulation.yaml. Example code for extracting these two features can be found in Example_Notebook.ipynb. 
