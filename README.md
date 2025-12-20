@@ -18,6 +18,9 @@ It demonstrates how to load the model, prepare an audio file, and apply perceptu
 ## Example Training
 To train your own model, follow the toy example in the train_example folder.
 
+## Version
+Tested with Python<3.12. For Python > 3.12 change the "TTS" to "coqui-tts" in the toml file. This repo is a fork from TTS which support python > 3.12.  
+
 ## Citation
 The manipulation method of manipulation Perceptual Voice Qualities was introduced in the paper ["Speech synthesis along perceptual voice quality dimensions"](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10888012)
 ```sh
