@@ -8,8 +8,20 @@ This repository contains code for manipulating perceptual voice quality (PVQ) fe
 ```sh
 git clone https://github.com/fgnt/pvq_manipulation.git
 cd pvq_manipulation
-pip install -e .
+# if python version >= 3.12
+pip install -e ".[py12]"
+# else
+pip install -e ".[legacy]"
+
 gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
+```
+If python version >= 3.12
+```sh
+cd ..
+git clone https://gitlab.tugraz.at/speech/creapy.git
+cd creapy
+nano setup.cfg  # or any text editor of your choice; change the line PyYAML==6.0.0 to PyYAML==6.0.1
+pip install -e . 
 ```
 
 ## Manipulation of Voice 
@@ -17,9 +29,6 @@ To get started, follow the Example_Notebook.ipynb.
 It demonstrates how to load the model, prepare an audio file, and apply perceptual voice quality manipulations step by step. 
 ## Example Training
 To train your own model, follow the toy example in the train_example folder.
-
-## Version
-Tested with Python<3.12. For Python > 3.12 change the "TTS" to "coqui-tts" in the toml file. This repo is a fork from TTS which support python > 3.12.  
 
 ## Citation
 The manipulation method of manipulation Perceptual Voice Qualities was introduced in the paper ["Speech synthesis along perceptual voice quality dimensions"](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10888012)
