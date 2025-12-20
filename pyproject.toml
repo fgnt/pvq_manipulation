@@ -1,5 +1,3 @@
-# pyproject.toml
-
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -16,23 +14,31 @@ keywords = ["audio", "speech"]
 
 dependencies = [
     "torchdiffeq",
-    "TTS==0.22.0",
     "padertorch",
     "onnxruntime",
     "ipywidgets",
     "ipykernel",
     "sacred",
     "hydra-core",
-    "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
+    "PyYAML>=6.0.1",
+    "notebook",
 ]
 
 [project.optional-dependencies]
+py12 = [
+    "coqui-tts"
+]
+legacy = [
+    "TTS",
+    "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
+]
 dev = [
     "pytest",
     "black",
     "flake8",
-    "isort",
+    "isort"
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
+

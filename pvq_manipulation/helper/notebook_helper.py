@@ -1,4 +1,5 @@
 import numpy as np 
+import librosa
 import torch
 import paderbox as pb
 import padertorch as pt
@@ -71,7 +72,7 @@ def extract_speaker_embedding(tts_model, example):
         torch.Tensor: The extracted speaker embedding (d-vector).
     """
     if 'loaded_audio_data' in example.keys():
-        audio_data = example['loaded_audio_data']['16_000']
+        audio_data = example['loaded_audio_data'][16_000]
     else:
         audio_data, sr = pb.io.load_audio(
             example['audio_file'],
@@ -167,7 +168,7 @@ def load_audio_files(example, sample_rates=[16_000, 24_000]):
     observation_loaded, sr = pb.io.load_audio(audio_path, return_sample_rate=True)
     example['loaded_audio_data'] = {
         rate: process_audio(
-            pb.transform.module_resample.resample_sox(observation_loaded, in_rate=sr, out_rate=rate),
+            librosa.resample(observation_loaded, orig_sr=sr, target_sr=rate),
             sample_rate=rate
         )
         for rate in sample_rates

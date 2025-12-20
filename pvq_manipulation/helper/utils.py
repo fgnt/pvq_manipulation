@@ -1,3 +1,4 @@
+import numpy as np
 import paderbox as pb
 import torch
 
@@ -29,6 +30,24 @@ def load_audio(file_path, target_sr):
     x[x > 1] = 1
     assert (x > 1).sum() + (x < -1).sum() == 0
     return x, target_sr
+
+
+def embedding_to_torch(d_vector, cuda=False, device="cpu"):
+    if cuda:
+        device = "cuda"
+    if d_vector is not None:
+        d_vector = np.asarray(d_vector)
+        d_vector = torch.from_numpy(d_vector).type(torch.FloatTensor)
+        d_vector = d_vector.squeeze().unsqueeze(0).to(device)
+    return d_vector
+
+def numpy_to_torch(np_array, dtype, cuda=False, device="cpu"):
+    if cuda:
+        device = "cuda"
+    if np_array is None:
+        return None
+    tensor = torch.as_tensor(np_array, dtype=dtype, device=device)
+    return tensor
 
 
 @dataclass

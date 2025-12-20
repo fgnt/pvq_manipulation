@@ -3,7 +3,6 @@ This is a wrapper for the TTS VITS model.
 TTS.tts.models.vits
 https://github.com/coqui-ai/TTS/blob/dev/TTS/tts/models/vits.py
 """
-import os
 import numpy as np
 import paderbox as pb
 import padertorch as pt
@@ -12,7 +11,7 @@ import torch
 from coqpit import Coqpit
 from padertorch.ops._stft import STFT
 from pathlib import Path
-from pvq_manipulation.helper.utils import VitsAudioConfig_NT, VitsConfig_NT, load_audio
+from pvq_manipulation.helper.utils import VitsAudioConfig_NT, VitsConfig_NT, load_audio, embedding_to_torch, numpy_to_torch
 
 from torch.utils.data import DataLoader
 from torch.cuda.amp.autocast_mode import autocast
@@ -21,7 +20,6 @@ from TTS.tts.layers.vits.networks import PosteriorEncoder, ResidualCouplingBlock
 from TTS.tts.models.vits import Vits, VitsArgs, VitsDataset, spec_to_mel, wav_to_spec
 from TTS.tts.utils.languages import LanguageManager
 from TTS.tts.utils.speakers import SpeakerManager
-from TTS.tts.utils.synthesis import embedding_to_torch, numpy_to_torch
 from TTS.tts.utils.text.tokenizer import TTSTokenizer
 from TTS.tts.utils.helpers import generate_path, rand_segments, segment, sequence_mask
 from TTS.utils.audio import AudioProcessor
@@ -35,8 +33,6 @@ if not torch.cuda.is_available():
 else:
     device = 'cuda'
 
-
-STORAGE_ROOT = Path(os.getenv('STORAGE_ROOT')).expanduser()
 
 
 class Vits_NT(Vits):
@@ -183,7 +179,8 @@ class Vits_NT(Vits):
         
         upsample_rate = torch.prod(torch.as_tensor(config.model_args.upsample_rates_decoder)).item()
         assert (upsample_rate == config.audio.hop_length), f" [!] Product of upsample rates must be equal to the hop length - {upsample_rate} vs {config.audio.hop_length}"
-        ap = AudioProcessor.init_from_config(config, verbose=verbose)
+        #ap = AudioProcessor.init_from_config(config, verbose=verbose)
+        ap = AudioProcessor.init_from_config(config)
         tokenizer, new_config = TTSTokenizer.init_from_config(config)
         language_manager = LanguageManager.init_from_config(config)
         speaker_manager_config = pb.io.load(Path(config['d_vector_model_file'])/'config_d_vector_model.json')
