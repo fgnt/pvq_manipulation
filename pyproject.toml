@@ -20,7 +20,7 @@ dependencies = [
     "ipykernel",
     "sacred",
     "hydra-core",
-    "PyYAML>=6.0.1",
+    "PyYAML==6.0.1",
     "notebook",
 ]
 
