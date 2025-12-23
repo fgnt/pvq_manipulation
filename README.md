@@ -1,7 +1,22 @@
 # PVQ Manipulation 
 ---
+[![IEEE Xplore](https://img.shields.io/badge/IEEE%20Xplore-PDF-blue.svg)](https://ieeexplore.ieee.org/document/10888012)
+[![ISCA DOI](https://img.shields.io/badge/ISCA/DOI-10.21437/Interspeech.2025--1443-blue.svg)](https://doi.org/10.21437/Interspeech.2025-1443)
 
-This repository contains code for manipulating perceptual voice quality (PVQ) features.
+Voice quality manipulation aims at modifying perceptual characteristics of speech such as breathiness, creakiness, or related voice attributes, while preserving linguistic content and speaker identity.
+This repository provides a research-oriented pipeline for controllable voice quality manipulation based on text-to-speech (TTS).
+
+The system is built on top of a TTS backbone and introduces a dedicated manipulation block, which enables targeted modification of voice qualities.
+The manipulation is realized via a conditioned manipulation module based on Continuous Normalizing Flows (CNFs), allowing for smooth and interpretable control over continuous voice quality dimensions.
+
+The TTS backend is based on [YourTTS](https://github.com/coqui-ai/TTS), which is currently supported for Python versions < 3.12.
+For newer Python versions (≥ 3.12), the system automatically switches to [Coqui-TTS](https://github.com/idiap/coqui-ai-TTS), which provides ongoing support for modern Python releases.
+
+> **_NOTE:_**
+This repository is under active development. The core voice quality manipulation pipeline is functional and can already be used for experimental studies and demonstrations.
+Ongoing work focuses on improving documentation, code structure, and usability.
+A Jupyter notebook showcasing an example voice quality manipulation is provided and serves as the main point of reference at this stage.
+If you encounter version mismatches, backend-specific limitations, or unexpected behavior, please feel free to open an issue so it can be tracked and addressed by the community.
 
 ## Installation
 
