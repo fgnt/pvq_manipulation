@@ -18,6 +18,10 @@ Ongoing work focuses on improving documentation, code structure, and usability.
 A Jupyter notebook showcasing an example voice quality manipulation is provided and serves as the main point of reference at this stage.
 If you encounter version mismatches, backend-specific limitations, or unexpected behavior, please feel free to open an issue so it can be tracked and addressed by the community.
 
+<img src="https://groups.uni-paderborn.de/nt/interspeech_2025_creak_demo/interspeech.png" alt="TTS-System" width="400">
+
+
+
 ## Installation
 
 ```sh
