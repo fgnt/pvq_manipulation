@@ -33,6 +33,9 @@ pip install -e
 pip install -e ".[legacy]"
 
 gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
+
+mkdir -p ./saved_models/audio_examples
+unzip -o ./saved_models/audio_examples.zip -d ./saved_models/audio_examples
 ```
 If python version >= 3.12
 ```sh
