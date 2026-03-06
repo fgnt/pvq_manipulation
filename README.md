@@ -28,7 +28,7 @@ If you encounter version mismatches, backend-specific limitations, or unexpected
 git clone https://github.com/fgnt/pvq_manipulation.git
 cd pvq_manipulation
 # if python version >= 3.12
-pip install -e ".[py12]"
+pip install -e 
 # else
 pip install -e ".[legacy]"
 

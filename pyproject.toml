@@ -18,25 +18,18 @@ dependencies = [
     "onnxruntime",
     "ipywidgets",
     "ipykernel",
-    "sacred",
     "hydra-core",
     "PyYAML==6.0.1",
     "notebook",
+    "coqui-tts",
+    "transformers<5.1.0",
+    "torchaudio",
+    "torchcodec",
 ]
 
 [project.optional-dependencies]
-py12 = [
-    "coqui-tts"
-]
 legacy = [
-    "TTS",
     "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
-]
-dev = [
-    "pytest",
-    "black",
-    "flake8",
-    "isort"
 ]
 
 [tool.setuptools.packages.find]

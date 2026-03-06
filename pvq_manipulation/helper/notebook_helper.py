@@ -154,7 +154,7 @@ def load_audio_files(example, sample_rates=[16_000, 24_000]):
     """
     if isinstance(example, dict):
         audio_file = example['audio_file']
-        audio_path = f"../saved_models/{audio_file}.wav"
+        audio_path = f"../saved_models/audio_examples/{audio_file}.wav"
     else:
         audio_path = example
         example = {'speaker_id': None, 'example_id': None}
