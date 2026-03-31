@@ -23,7 +23,7 @@ def make_split(split_name, num_examples, storage_dir_dataset):
         np.save(storage_dir_dataset_sub / f"{example_id}.npy", x[idx])
         dataset_dict[example_id] = {
             "observation": storage_dir_dataset_sub / f"{example_id}.npy",
-            "label": y[idx].tolist(),
+            "label": [y[idx].tolist()],
         }
     return dataset_dict
 
@@ -61,18 +61,16 @@ def get_dataset(batch_size, storage_dir, buffer_size=50):
 
 @hydra.main(version_base=None, config_path="configs", config_name="config_toy_example")
 def main(cfg: DictConfig):
-    cfg.trainer.storage_dir = pt.io.get_new_subdir(
-        cfg.trainer.storage_dir / cfg.ex_name,
-        id_naming='index',
-        mkdir=True,
-    )
+    cfg.trainer.storage_dir = Path(cfg.trainer.storage_dir) / cfg.ex_name
     cfg.trainer.storage_dir.mkdir(parents=True, exist_ok=True)
     pb.io.dump_yaml(
         OmegaConf.to_container(cfg, resolve=True),
         cfg.trainer.storage_dir / "config.yaml"
     )
 
-    trainer = Trainer.get_config(OmegaConf.to_container(cfg.trainer, resolve=True))
+    trainer = Trainer.get_config(
+        OmegaConf.to_container(cfg.trainer, resolve=True)
+    )
     trainer = Trainer.from_config(trainer)
 
     train, eval = get_dataset(cfg.batch_size, cfg.storage_dir_dataset)
