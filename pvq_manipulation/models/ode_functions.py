@@ -1,5 +1,5 @@
 """
-Implementation of Δz = f(t, z, labels)
+Implementation of Δz = f(t, z, condition)
 f() is a neural network with the architecture defined in StyleFlow
 StyleFlow: Attribute-conditioned Exploration of StyleGAN-Generated Images using Conditional Continuous Normalizing Flows
 """
@@ -28,20 +28,20 @@ class CNFNN(torch.nn.Module):
             ))
             input_dim = hidden_dim
 
-    def forward(self, t, z, labels):
+    def forward(self, t, z, condition):
         """
-        This function computes: Δz = f(t, z, labels)
+        This function computes: Δz = f(t, z, condition)
 
         Args:
             t (torch.Tensor): () Time step of the ODE
             z (torch.Tensor): (Batch_size, Input_dim) Intermediate value
-            labels (torch.Tensor): (Batch_size, condition_dim) Speaker attributes 
+            condition (torch.Tensor): (Batch_size, condition_dim) Speaker attributes 
 
         Returns:
             Δz (torch.Tensor): : (Batch_size, Input_dim) Computed delta
         """
         for layer in self.layers:
-            z = layer(t, z, labels)
+            z = layer(t, z, condition)
         return z
 
 
@@ -66,22 +66,22 @@ class CNFBlock(torch.nn.Module):
         )
         self.output_layer = output_layer
 
-    def forward(self, t, z, labels):
+    def forward(self, t, z, condition):
         """
         Args:
             t (torch.Tensor): () Time step of the ODE
             z (torch.Tensor): (Batch_size, Input_dim) Intermediate value
-            labels (torch.Tensor): (Batch_size, condition_dim) Speaker attributes 
+            condition (torch.Tensor): (Batch_size, condition_dim) Speaker attributes 
 
         Returns:
             z (torch.Tensor): : (Batch_size, Output_dim) Intermediate value
         """
-        if labels.dim() == 1:
-            labels = labels[:, None]
-        elif labels.dim() == 3:
-            labels = labels.squeeze(1)
+        if condition.dim() == 1:
+            condition = condition[:, None]
+        elif condition.dim() == 3:
+            condition = condition.squeeze(1)
 
-        tz_cat = torch.cat((t.expand(z.shape[0], 1), labels), dim=1)
+        tz_cat = torch.cat((t.expand(z.shape[0], 1), condition), dim=1)
 
         gate = torch.sigmoid(self._hyper_gate(tz_cat))
         bias = self._hyper_bias(tz_cat)
@@ -126,20 +126,23 @@ class MLP(torch.nn.Module):
             if idx < len(hidden_channels) - 2:
                 self.layers.append(ACTIVATION_FN_MAP[activation]())
 
-    def forward(self, t, z, labels):
+    def forward(self, t, z, condition):
         """
-        This function computes: Δz = f(t, z, labels)
+        This function computes: Δz = f(t, z, condition)
 
         Args:
             t (torch.Tensor): () Time step of the ODE
             z (torch.Tensor): (Batch_size, Input_dim) Intermediate value
-            labels (torch.Tensor): (Batch_size, condition_dim) Speaker attributes
+            condition (torch.Tensor): (Batch_size, condition_dim) Speaker attributes
 
         Returns:
             Δz (torch.Tensor): : (Batch_size, Input_dim) Computed delta
         """
         t = t.expand(z.shape[0], 1)
-        z = torch.cat((z, labels, t), dim=1)
+        if condition is not None:   
+            z = torch.cat((z, condition, t), dim=1)
+        else:
+            z = torch.cat((z, t), dim=1)
         for layer in self.layers:
             z = layer(z)
         return z

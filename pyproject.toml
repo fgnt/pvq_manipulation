@@ -25,6 +25,7 @@ dependencies = [
     "transformers<5.1.0",
     "torchaudio",
     "torchcodec",
+    "sacred",
 ]
 
 [project.optional-dependencies]
