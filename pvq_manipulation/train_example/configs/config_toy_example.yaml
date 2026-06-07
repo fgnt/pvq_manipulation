@@ -15,8 +15,10 @@ trainer:
   summary_trigger: [250, 'iteration']
   checkpoint_trigger: [500, 'iteration']
   stop_trigger: [100_000, 'iteration']
-  storage_dir: /path/to/default/storage
+  storage_dir: #/path/to/default/storage
 
 storage_dir_dataset: ./dataset
 batch_size: 20
 ex_name: toy_example_flow
+
+dataset_name: moons

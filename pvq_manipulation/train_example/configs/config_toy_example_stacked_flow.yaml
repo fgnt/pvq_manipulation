@@ -1,0 +1,43 @@
+trainer:
+  model:
+    factory: pvq_manipulation.models.normalizing_flows.StackedFlow
+    high_level_flow:
+      factory: pvq_manipulation.models.ode_functions.CNFNN
+      input_dim: 2
+      condition_dim: 3
+      hidden_channels: [100, 100, 100]
+    low_level_flow:
+      factory: pvq_manipulation.models.ode_functions.CNFNN
+      input_dim: 2
+      condition_dim: 1
+      hidden_channels: [100, 100, 100]
+    classifier:
+      factory: pvq_manipulation.models.mlp.MLP
+      input_dim: 2
+      hidden_channels: [7]
+      output_dim: 3
+      output_activation: null
+    regressor:
+      null
+    condition_list:
+      [
+        [ 'high_level' ],
+        [ 'low_level' ]
+      ]
+  loss_weights:
+    likelihood: 1.
+    bce_loss: 1.
+  optimizer:
+    factory: padertorch.train.optimizer.Adam
+    lr: 1.0e-2
+    weight_decay: 1.0e-5
+  summary_trigger: [250, 'iteration']
+  checkpoint_trigger: [500, 'iteration']
+  stop_trigger: [100_000, 'iteration']
+  storage_dir: "test" #path/to/default/storage
+
+storage_dir_dataset: ./dataset
+batch_size: 500
+ex_name: toy_example_stacked_flow
+
+dataset_name: stacked_moons 

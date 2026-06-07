@@ -21,3 +21,5 @@ trainer:
 storage_dir_dataset: ./dataset
 batch_size: 20
 ex_name: toy_example_flow
+
+dataset_name: moons 
