@@ -292,7 +292,7 @@ with gr.Blocks(
             deviation_slider = gr.Slider(
                 label="Manipulation Intensity",
                 minimum=0.0,
-                maximum=4.0,
+                maximum=2.0,
                 value=1.0,
                 step=0.1
             )
