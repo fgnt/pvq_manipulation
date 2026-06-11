@@ -46,8 +46,9 @@ Starting the app using Gradio:
 gradio app.py
 
 # if you are using windows
-gradio ./app.py
+gradio .\app.py
 ```
+Gradio generates a link that you can open in your browser.
 ## Example Training
 To train your own model, follow the toy example in the train_example folder.
 
