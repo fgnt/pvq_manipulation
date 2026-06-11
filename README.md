@@ -24,23 +24,13 @@ If you encounter version mismatches, backend-specific limitations, or unexpected
 ```sh
 git clone https://github.com/fgnt/pvq_manipulation.git
 cd pvq_manipulation
-# if python version >= 3.12
-pip install -e 
+
+# if you use windows
+pip install -e .
+
 # else
-pip install -e ".[legacy]"
-
-gh release download v1.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
-
-unzip -o ./saved_models/audio_examples.zip -d ./saved_models
-```
-If python version >= 3.12
-```sh
-cd ..
-git clone https://gitlab.tugraz.at/speech/creapy.git
-cd creapy
-nano setup.cfg  # or any text editor of your choice; change the line PyYAML==6.0.0 to PyYAML==6.0.1
-pip install -e . 
-```
+pip install -e .
+gh release download v2.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
 
 ## Manipulation of Voice 
 To get started, follow the Example_Notebook.ipynb.
