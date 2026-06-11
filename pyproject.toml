@@ -19,20 +19,15 @@ dependencies = [
     "ipywidgets",
     "ipykernel",
     "hydra-core",
-    "PyYAML==6.0.1",
+    "PyYAML",
     "notebook",
     "coqui-tts",
     "transformers<5.1.0",
     "torchaudio",
     "torchcodec",
     "sacred",
+    "gradio"
 ]
-
-[project.optional-dependencies]
-legacy = [
-    "creapy @ git+https://gitlab.tugraz.at/speech/creapy.git"
-]
-
 [tool.setuptools.packages.find]
 where = ["."]
 

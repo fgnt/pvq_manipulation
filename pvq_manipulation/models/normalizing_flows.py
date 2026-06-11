@@ -217,8 +217,8 @@ class CCNF(Model):
     
     @staticmethod
     def load_model(model_path, checkpoint):
-        model_dict = pb.io.load(model_path / "config_norm_flow.json")
-        model = Model.from_config(model_dict)
+        model_dict = pb.io.load(model_path / "config_norm_flow.yaml")
+        model = Model.from_config(model_dict['model'])
         cp = torch.load(
             model_path / checkpoint,
             map_location=device,
@@ -436,7 +436,7 @@ class StackedFlow(Model):
 
     @staticmethod
     def load_model(model_path, checkpoint):
-        model_dict = pb.io.load_yaml(model_path / "config.yaml")
+        model_dict = pb.io.load_yaml(model_path / "config_norm_flow_stacked.yaml")
         model = Model.from_config(model_dict['model'])
         cp = torch.load(
             model_path / checkpoint,
@@ -444,7 +444,9 @@ class StackedFlow(Model):
             weights_only=False
         )
         model_weights = cp.copy()
-        model.load_state_dict(model_weights['model'])
+        if 'model' in model_weights:
+            model_weights = model_weights['model']
+        model.load_state_dict(model_weights)
         model.eval()
         return model
 

@@ -4,26 +4,89 @@ import torch
 import paderbox as pb
 import padertorch as pt
 
+from collections import defaultdict
 from onnxruntime import InferenceSession
 from pathlib import Path
 from pvq_manipulation.helper.vad import EnergyVAD
-from pvq_manipulation.helper.creapy_wrapper import process_file
 
 if torch.cuda.is_available():
     device = 'cuda'
 else:
     device = 'cpu'
+
+def get_speaker_labels( 
+    speaker_labels, 
+    pvq_labels,
+    manipulation=None,
+    manipulation_intensity=0,
+    config=None,
+    stacked_flow=False,
+):
+    """
+    Build normalized speaker-conditioning labels for flow-based voice manipulation.
+
+    The function reads raw speaker label values, applies label-specific normalization,
+    and optionally adds an offset to one selected manipulation attribute.
+
+    Args:
+        speaker_labels (dict): Mapping from label name to raw attribute value.
+        pvq_labels (list[str]): Ordered list of PVQ labels used as conditioning.
+        manipulation (str | None): Label to modify (e.g. "Breathiness").
+            If None, no manipulation is applied.
+        manipulation_intensity (float): Additive offset for the selected
+            manipulation label.
+        config (dict | None): Model configuration. Required when
+            stacked_flow=True because high-level condition groups are read from
+            config['model']['condition_list'].
+        stacked_flow (bool): If True, return grouped conditioning tensors per
+            flow level. If False, return one flat conditioning tensor.
+
+    Returns:
+        torch.Tensor | dict[int, torch.Tensor]:
+        - If stacked_flow=False: tensor with shape (1, num_labels).
+        - If stacked_flow=True: dictionary mapping flow-level index to tensors
+          of shape (1, num_conditions_in_level).
+    """
+    speaker_conditioning = []
+    for label_key in pvq_labels:
+        if label_key == 'pitch_mean':
+            attribute = speaker_labels[label_key] / 400
+        elif label_key in ['Gender', 'Creak_mean']:
+            attribute = speaker_labels[label_key] 
+        else:
+            attribute = speaker_labels[label_key] / 100
+        if manipulation is not None and label_key == manipulation:
+            attribute += manipulation_intensity
+        speaker_conditioning.append(attribute)
+    
+    if stacked_flow:
+        speaker_conditioning_dict = defaultdict(list)
+        for idx_high_level, conditions in enumerate(config['model']['condition_list']):
+            for condition in conditions:
+                for idx, label_key in enumerate(pvq_labels):
+                    if label_key == condition:
+                        speaker_conditioning_dict[idx_high_level].append(
+                            speaker_conditioning[idx]
+                        )
+        for idx, speaker_conditioning in speaker_conditioning_dict.items():
+            speaker_conditioning = torch.tensor([speaker_conditioning], device=device, dtype=torch.float)
+            speaker_conditioning_dict[idx] = speaker_conditioning
+        return speaker_conditioning_dict
+    else:
+        return torch.tensor(speaker_conditioning)[None, :]
  
  
 def get_manipulation(
     transcription,
-    labels,
+    pvq_labels,
+    speaker_labels, 
     flow, 
     tts_model,    
     d_vector,
     manipulation,
     manipulation_intensity=1,
-    pvq_labels=None,
+    stacked_flow=False,
+    config=None,
 ):
     """
     Synthesizes manipulated speech based on the given manipulation type and intensity.
@@ -39,24 +102,34 @@ def get_manipulation(
     Returns:
         torch.Tensor: The synthesized audio waveform after manipulation.
     """
-    for manipulation_idx, name in enumerate(pvq_labels):
-        if name == manipulation:
-            break
-    else:
-        raise NotImplementedError(f"{manipulation} not found in pvq_labels.")
-        
-    labels_manipulated = labels.clone()
-    labels_manipulated[:, manipulation_idx] += manipulation_intensity
+
+    speaker_conditioning = get_speaker_labels(
+        speaker_labels=speaker_labels, 
+        pvq_labels=pvq_labels,
+        manipulation=None,
+        manipulation_intensity=0,
+        config=config,
+        stacked_flow=stacked_flow,
+    )
+
+    speaker_conditioning_manipulated = get_speaker_labels( 
+        speaker_labels=speaker_labels, 
+        pvq_labels=pvq_labels,
+        manipulation=manipulation,
+        manipulation_intensity=manipulation_intensity,
+        config=config,
+        stacked_flow=stacked_flow,
+    )
 
     with torch.no_grad():
-        output_forward = flow.forward((d_vector.to(device).float(), labels))[0]
-        sampled_class_manipulated = flow.sample((output_forward, labels_manipulated))[0]
+        output_forward = flow.forward((d_vector.to(device).float(), speaker_conditioning))[0]
+        sampled_class_manipulated = flow.sample((output_forward, speaker_conditioning_manipulated))[0]
 
     return tts_model.synthesize_from_example({
         'text': transcription,
         'd_vector': d_vector.cpu().numpy(),
         'd_vector_man': sampled_class_manipulated.cpu().numpy(),
-    })
+    }), speaker_conditioning, speaker_conditioning_manipulated
 
 
 def extract_speaker_embedding(tts_model, example):
@@ -94,19 +167,6 @@ def extract_speaker_embedding(tts_model, example):
     return d_vector
 
 
-def get_creak_label(example):
-    """
-    Computes the mean creakiness label for the given audio example.
-    Args:
-        example (dict): The audio example containing 'loaded_audio_data'.
-    Returns:
-        float: The mean creakiness label (scaled to 0-100).
-    """
-    audio_data = example['loaded_audio_data'][16_000]
-    _, y_pred, included_indices = process_file(audio_data)
-    return np.mean(y_pred[included_indices]) * 100
-
-
 def load_speaker_labels(example, hubert_model, pvq_labels, reg_stor_dir=Path('../saved_models/')):
     """
     Loads speaker labels for the given audio example using a HuBERT model and
@@ -128,15 +188,12 @@ def load_speaker_labels(example, hubert_model, pvq_labels, reg_stor_dir=Path('..
 
     pvqd_predictions = {}
     for pvq in pvq_labels:
-        if pvq == 'Creak':
-            pvqd_predictions[pvq] = get_creak_label(example)
-        else:
-            session = InferenceSession(
-                (reg_stor_dir / f"{pvq}.onnx").read_bytes(), providers=["CPUExecutionProvider"]
-            )
-            pvqd_predictions[pvq] = session.run(
-                None, {"X": features[None]}
-            )[0].squeeze(1)[0]
+        session = InferenceSession(
+            (reg_stor_dir / f"{pvq}.onnx").read_bytes(), providers=["CPUExecutionProvider"]
+        )
+        pvqd_predictions[pvq] = session.run(
+            None, {"X": features[None]}
+        )[0].squeeze(1)[0]
 
     labels = [pvqd_predictions[pvq] / 100 for pvq in pvq_labels]
     return torch.tensor(labels, device=device).float()
@@ -154,7 +211,7 @@ def load_audio_files(example, sample_rates=[16_000, 24_000]):
     """
     if isinstance(example, dict):
         audio_file = example['audio_file']
-        audio_path = f"../saved_models/audio_examples/{audio_file}.wav"
+        audio_path = f"../saved_models/{audio_file}.wav"
     else:
         audio_path = example
         example = {'speaker_id': None, 'example_id': None}
