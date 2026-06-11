@@ -14,7 +14,7 @@ keywords = ["audio", "speech"]
 
 dependencies = [
     "torchdiffeq",
-    "padertorch",
+    "padertorch; platform_system != 'Windows'",
     "onnxruntime",
     "ipywidgets",
     "ipykernel",
