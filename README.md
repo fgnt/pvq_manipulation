@@ -25,16 +25,29 @@ If you encounter version mismatches, backend-specific limitations, or unexpected
 git clone https://github.com/fgnt/pvq_manipulation.git
 cd pvq_manipulation
 
-# if you use windows
 pip install -e .
 
-# else
-pip install -e .
 gh release download v2.0.0 --repo fgnt/pvq_manipulation --dir ./saved_models
+```
+
+## Windows notes
+```sh
+git clone https://github.com/fgnt/padertorch.git
+cd padertorch
+pip install -e .
+```
 
 ## Manipulation of Voice 
-To get started, follow the Example_Notebook.ipynb.
-It demonstrates how to load the model, prepare an audio file, and apply perceptual voice quality manipulations step by step. 
+To get started, you can either use `app.py` with Gradio or follow the examples in `Example_Notebook.ipynb`.
+
+Starting the app using Gradio:
+
+```sh
+gradio app.py
+
+# if you are using windows
+gradio ./app.py
+```
 ## Example Training
 To train your own model, follow the toy example in the train_example folder.
 
