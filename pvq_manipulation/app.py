@@ -249,7 +249,6 @@ with gr.Blocks(
             <div class='header'>🎙️ Manipulation of Voice Qualities</div>
             <div class='subtitle'>
                 Choose a speaker, adjust a voice-quality dimension, and compare the original against the manipulated synthesis.
-                The interface is styled for a softer, more modern look.
             </div>
         </div>
         """
