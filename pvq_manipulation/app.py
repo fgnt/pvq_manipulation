@@ -62,9 +62,11 @@ def update_manipulation(
     transcription,
     manipulation_feature,
     manipulation_intensity,
-    stacked_flow,
+    stacked_flow_mode,
 ):
     global cached_example_id, wav_unmanipulated
+
+    stacked_flow = stacked_flow_mode == "Stacked Flow"
 
     if stacked_flow:
         pvq_labels = config_norm_flow_stacked['pvq_labels']
@@ -283,9 +285,10 @@ with gr.Blocks(
                 type="value"
             )
         with gr.Column(scale=1):
-            stacked_flow = gr.Checkbox(
-                label="Stacked Flow",
-                value=True,   
+            stacked_flow = gr.Radio(
+                label="Flow Type",
+                choices=["Single Flow", "Stacked Flow"],
+                value="Stacked Flow",
             )
         with gr.Column(scale=2):
             deviation_slider = gr.Slider(
