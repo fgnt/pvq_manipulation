@@ -215,6 +215,20 @@ class CCNF(Model):
             state = tuple(s[1] if s.shape[0] > 1 else s[0] for s in state)
         return state
     
+    def apply_resampling(
+            self, 
+            d_vector, 
+            estimated_condtioning,
+            target_conditioning,
+        ):
+        output_forward = self.forward(
+            (d_vector, estimated_condtioning)
+        )[0]
+        sampled_class_manipulated = self.sample(
+            (output_forward, target_conditioning)
+        )[0]
+        return sampled_class_manipulated
+    
     @staticmethod
     def load_model(model_path, checkpoint):
         model_dict = pb.io.load(model_path / "config_norm_flow.yaml")
@@ -433,6 +447,21 @@ class StackedFlow(Model):
             reverse=True
         )
         return z_1, y, delta_logpz
+    
+    def apply_resampling(
+            self, 
+            d_vector, 
+            estimated_condtioning,
+            target_conditioning,
+        ):
+        output_forward = self.forward(
+            (d_vector, estimated_condtioning)
+        )[0]
+        sampled_class_manipulated = self.sample(
+            (output_forward, target_conditioning)
+        )[0]
+        return sampled_class_manipulated
+
 
     @staticmethod
     def load_model(model_path, checkpoint):

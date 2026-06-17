@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 from pvq_manipulation.models.vits import Vits_NT
 from pvq_manipulation.models.normalizing_flows import CCNF, StackedFlow
+from pvq_manipulation.models.flow_matching import FlowMatching
 from pvq_manipulation.helper.notebook_helper import *
 
 dataset_dict = {
@@ -44,6 +45,14 @@ normalizing_flow_stacked = StackedFlow.load_model(
     checkpoint="model_norm_flow_stacked.pt"
 )
 
+config_flow_matching = pb.io.load_yaml(
+    storage_dir / "config_flow_matching.yaml"
+)
+flow_matching = FlowMatching.load_model(
+    storage_dir, 
+    checkpoint="flow_matching.pt"
+)
+
 tts_model = Vits_NT.load_model(storage_dir, checkpoint="tts_model.pt")
 dataset_labels = pb.io.load_json(storage_dir / "dataset_labels.json")
 
@@ -62,16 +71,22 @@ def update_manipulation(
     transcription,
     manipulation_feature,
     manipulation_intensity,
-    stacked_flow_mode,
+    flow_mode,
 ):
     global cached_example_id, wav_unmanipulated
 
-    stacked_flow = stacked_flow_mode == "Stacked Flow"
-
-    if stacked_flow:
+    if flow_mode == "Stacked Flow":
         pvq_labels = config_norm_flow_stacked['pvq_labels']
+        flow = normalizing_flow_stacked
+        stacked_flow = True
+    elif flow_mode == "Flow Matching":
+        pvq_labels = config_flow_matching['pvq_labels']
+        flow = flow_matching
+        stacked_flow = False
     else:
         pvq_labels = config_norm_flow['pvq_labels']
+        flow = normalizing_flow
+        stacked_flow = False
 
 
     example = dataset_dict[example_id]
@@ -85,12 +100,13 @@ def update_manipulation(
     else:
         speaker_embedding = torch.load(f"../saved_models/{audio_file}.pth")
 
+
     wav_manipulated, speaker_conditioning, speaker_conditioning_manipulated = get_manipulation(
         transcription=transcription, 
         d_vector=speaker_embedding, 
         pvq_labels=pvq_labels,
         speaker_labels=dataset_labels[example['example_id']], 
-        flow=normalizing_flow_stacked if stacked_flow else normalizing_flow,
+        flow=flow,
         tts_model=tts_model,
         manipulation=manipulation_feature, 
         manipulation_intensity=manipulation_intensity, 
@@ -285,9 +301,9 @@ with gr.Blocks(
                 type="value"
             )
         with gr.Column(scale=1):
-            stacked_flow = gr.Radio(
+            flow_mode = gr.Radio(
                 label="Flow Type",
-                choices=["Single Flow", "Stacked Flow"],
+                choices=["Single Flow", "Stacked Flow", "Flow Matching"],
                 value="Stacked Flow",
             )
         with gr.Column(scale=2):
@@ -315,7 +331,7 @@ with gr.Blocks(
 
     submit_btn.click(
         fn=update_manipulation,
-        inputs=[speaker_dropdown, text_input, pvq_dropdown, deviation_slider, stacked_flow],
+        inputs=[speaker_dropdown, text_input, pvq_dropdown, deviation_slider, flow_mode],
         outputs=[unmanip_audio, manip_audio, results_table]
     )
 

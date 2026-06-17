@@ -122,9 +122,11 @@ def get_manipulation(
     )
 
     with torch.no_grad():
-        output_forward = flow.forward((d_vector.to(device).float(), speaker_conditioning))[0]
-        sampled_class_manipulated = flow.sample((output_forward, speaker_conditioning_manipulated))[0]
-
+        sampled_class_manipulated = flow.apply_resampling(
+            d_vector.to(device).float(), 
+            speaker_conditioning,
+            speaker_conditioning_manipulated
+        )
     return tts_model.synthesize_from_example({
         'text': transcription,
         'd_vector': d_vector.cpu().numpy(),

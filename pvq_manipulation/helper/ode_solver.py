@@ -1,6 +1,6 @@
 import numpy as np
 
-def ode_solver(f, initial_value, start, stop, steps):
+def ode_solver(f, initial_value, condition, start, stop, steps):
     """
     Simple Euler ODE solver for sampling. 
     Args:
@@ -16,5 +16,5 @@ def ode_solver(f, initial_value, start, stop, steps):
 
     for k in range(steps):
         delta_t = t[k+1] - t[k]  
-        y[k+1] = y[k] + delta_t * f(y[k], t[k])  
+        y[k+1] = y[k] + delta_t * f(y[k], t[k], condition)  
     return t, y

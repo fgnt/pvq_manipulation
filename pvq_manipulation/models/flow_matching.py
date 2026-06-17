@@ -61,17 +61,55 @@ class FlowMatching(Model):
         steps=10, 
     ):
         with torch.no_grad():
-            def helper_fn(y, t):
+            def helper_fn(y, t, condition):
                 t = broadcast_to(t, [y.shape[0], 1], device=y.device)
                 Δy = self.ode_function(t, y, condition)  
                 return Δy
-            _, x = ode_solver(helper_fn, noise, start=start, stop=stop, steps=steps)  
+            _, x = ode_solver(
+                helper_fn, 
+                noise, 
+                condition=condition,
+                start=start, 
+                stop=stop, 
+                steps=steps
+            )  
             x = torch.stack(x, dim=0)
             return x
+    
+    def apply_resampling(
+            self, 
+            x, 
+            estimated_condtioning,
+            target_conditioning,
+        ):
+        with torch.no_grad():
+            def helper_fn(y, t, condition):
+                t = broadcast_to(t, [y.shape[0], 1], device=y.device)
+                Δy = self.ode_function(t, y, condition)  
+                return Δy
+            _, x_transformed = ode_solver(
+                helper_fn, 
+                x, 
+                condition=estimated_condtioning,
+                start=1, 
+                stop=0, 
+                steps=100
+            )
+            x_transformed = torch.stack(x_transformed, dim=0)[-1]
+            _, x_resampled = ode_solver(
+                helper_fn, 
+                x_transformed,
+                condition=target_conditioning, 
+                start=0, 
+                stop=1, 
+                steps=100
+            )  
+            x_resampled = torch.stack(x_resampled, dim=0)[-1]
+            return x_resampled
 
     @staticmethod
     def load_model(model_path, checkpoint):
-        model_dict = pb.io.load_yaml(model_path / "config.yaml")
+        model_dict = pb.io.load_yaml(model_path / "config_flow_matching.yaml")
         model = Model.from_config(model_dict['model'])
         cp = torch.load(
             model_path / checkpoint,
