@@ -73,7 +73,7 @@ def get_speaker_labels(
             speaker_conditioning_dict[idx] = speaker_conditioning
         return speaker_conditioning_dict
     else:
-        return torch.tensor(speaker_conditioning)[None, :]
+        return torch.tensor(speaker_conditioning)[None, :].to(device)
  
  
 def get_manipulation(
@@ -127,6 +127,7 @@ def get_manipulation(
             speaker_conditioning,
             speaker_conditioning_manipulated
         )
+ 
     return tts_model.synthesize_from_example({
         'text': transcription,
         'd_vector': d_vector.cpu().numpy(),

@@ -476,6 +476,7 @@ class StackedFlow(Model):
         if 'model' in model_weights:
             model_weights = model_weights['model']
         model.load_state_dict(model_weights)
+        model.to(device)
         model.eval()
         return model
 

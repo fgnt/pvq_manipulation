@@ -4,6 +4,11 @@ import paderbox as pb
 from padertorch.base import Model
 from pvq_manipulation.helper.ode_solver import ode_solver
 
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
+
 
 def broadcast_to(tensor, shape, device):
     if isinstance(tensor, (float, int)):
@@ -121,6 +126,7 @@ class FlowMatching(Model):
             model.load_state_dict(model_weights['model'])
         else:
             model.load_state_dict(model_weights)
+        model.to(device)
         model.eval()
         return model
     
